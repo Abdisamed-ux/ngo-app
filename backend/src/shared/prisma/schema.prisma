@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id                     String          @id @default(uuid()) @db.Uuid
+  email                  String          @unique @db.VarChar(255)
+  password_hash          String          @db.VarChar(255)
+  role                   Role
+  full_name              String          @db.VarChar(255)
+  phone                  String?         @db.VarChar(30)
+  is_active              Boolean         @default(true)
+  created_at             DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime        @updatedAt @db.Timestamptz(6)
+  aid_requests           aid_requests[]  @relation("beneficiary_requests")
+  assigned_requests      aid_requests[]  @relation("caseworker_requests")
+  audit_logs             audit_logs[]
+  authored_disbursements disbursements[]
+  donations              donations[]
+}
+
+model aid_categories {
+  id         String      @id @default(uuid()) @db.Uuid
+  name       String      @unique
+  created_at DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at DateTime    @updatedAt @db.Timestamptz(6)
+  donations  donations[]
+}
+
+model regions {
+  id           String         @id @default(uuid()) @db.Uuid
+  name         String         @unique
+  created_at   DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime       @updatedAt @db.Timestamptz(6)
+  aid_requests aid_requests[]
+  donations    donations[]
+}
+
+model aid_types {
+  id           String         @id @default(uuid()) @db.Uuid
+  name         String         @unique
+  created_at   DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime       @updatedAt @db.Timestamptz(6)
+  aid_requests aid_requests[]
+}
+
+model donations {
+  id             String          @id @default(uuid()) @db.Uuid
+  donor_id       String?         @db.Uuid
+  amount         Decimal         @db.Decimal(15, 2)
+  currency       String          @default("USD") @db.VarChar(3)
+  payment_method PaymentMethod
+  category_id    String?         @db.Uuid
+  region_id      String?         @db.Uuid
+  receipt_number String?         @unique @db.VarChar(50)
+  is_anonymous   Boolean         @default(false)
+  status         DonationStatus
+  donation_date  DateTime        @db.Date
+  notes          String?
+  created_at     DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime        @updatedAt @db.Timestamptz(6)
+  category       aid_categories? @relation(fields: [category_id], references: [id])
+  donor          users?          @relation(fields: [donor_id], references: [id])
+  region         regions?        @relation(fields: [region_id], references: [id])
+
+  @@index([donor_id, donation_date])
+  @@index([status, created_at])
+}
+
+model aid_requests {
+  id              String           @id @default(uuid()) @db.Uuid
+  request_number  String           @unique @db.VarChar(20)
+  beneficiary_id  String           @db.Uuid
+  caseworker_id   String?          @db.Uuid
+  aid_type_id     String           @db.Uuid
+  urgency         UrgencyLevel
+  status          AidRequestStatus
+  estimated_value Decimal?         @db.Decimal(15, 2)
+  region_id       String           @db.Uuid
+  dependants      Int              @default(0)
+  description     String
+  reviewed_at     DateTime?        @db.Timestamptz(6)
+  created_at      DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime         @updatedAt @db.Timestamptz(6)
+  aid_type        aid_types        @relation(fields: [aid_type_id], references: [id])
+  beneficiary     users            @relation("beneficiary_requests", fields: [beneficiary_id], references: [id])
+  caseworker      users?           @relation("caseworker_requests", fields: [caseworker_id], references: [id])
+  region          regions          @relation(fields: [region_id], references: [id])
+  disbursements   disbursements[]
+
+  @@index([status, urgency, caseworker_id])
+  @@index([beneficiary_id, created_at])
+  @@index([region_id, urgency])
+}
+
+model disbursements {
+  id                String       @id @default(uuid()) @db.Uuid
+  aid_request_id    String       @db.Uuid
+  authorised_by     String       @db.Uuid
+  amount            Decimal      @db.Decimal(15, 2)
+  payment_reference String?      @db.VarChar(100)
+  disbursed_at      DateTime     @db.Timestamptz(6)
+  notes             String?
+  created_at        DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime     @updatedAt @db.Timestamptz(6)
+  aid_request       aid_requests @relation(fields: [aid_request_id], references: [id])
+  authoriser        users        @relation(fields: [authorised_by], references: [id])
+}
+
+model audit_logs {
+  id          String   @id @default(uuid()) @db.Uuid
+  entity_type String   @db.VarChar(50)
+  entity_id   String   @db.Uuid
+  changed_by  String   @db.Uuid
+  action      String   @db.VarChar(20)
+  old_value   Json?
+  new_value   Json?
+  ip_address  String?  @db.Inet
+  timestamp   DateTime @db.Timestamptz(6)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+  user        users    @relation(fields: [changed_by], references: [id])
+
+  @@index([entity_type, entity_id])
+  @@index([changed_by, timestamp])
+}
+
+enum Role {
+  SUPER_ADMIN
+  NGO_ADMIN
+  CASEWORKER
+  DONOR
+  BENEFICIARY
+}
+
+enum PaymentMethod {
+  BANK
+  CARD
+  CASH
+  CHEQUE
+  CRYPTO
+  MOBILE
+}
+
+enum DonationStatus {
+  PENDING
+  CONFIRMED
+  ALLOCATED
+  REFUNDED
+}
+
+enum UrgencyLevel {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum AidRequestStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  DISBURSED
+}

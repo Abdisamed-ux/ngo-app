@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --scrollbar-bg: #1e293b;
+    --scrollbar-thumb: #334155;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    @apply bg-slate-50 text-slate-900 dark:bg-dark-bg dark:text-slate-100;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-bg);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/40 dark:bg-dark-surface/60 dark:border-white/10;
+  }
+
+  .glass-dark {
+    @apply bg-dark-surface/80 backdrop-blur-md border border-white/10;
+  }
+
+  .card {
+    @apply bg-white dark:bg-dark-surface border border-slate-200 dark:border-dark-border rounded-2xl shadow-sm;
+  }
+
+  .btn-primary {
+    @apply bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl 
+           transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/50
+           disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply bg-transparent hover:bg-slate-100 dark:hover:bg-dark-border text-slate-700 dark:text-slate-300 
+           font-medium px-4 py-2 rounded-xl transition-all duration-200;
+  }
+
+  .btn-danger {
+    @apply bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2.5 rounded-xl 
+           transition-all duration-200 disabled:opacity-50 active:scale-[0.98];
+  }
+
+  .input {
+    @apply w-full bg-slate-50 dark:bg-dark-bg border border-slate-200 dark:border-dark-border 
+           rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 
+           placeholder:text-slate-400 dark:placeholder:text-slate-500
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 
+           transition-all duration-200;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+           text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-border
+           hover:text-slate-900 dark:hover:text-white transition-all duration-150;
+  }
+
+  .nav-link.active {
+    @apply bg-brand-500/10 text-brand-600;
+  }
+
+  .table-row-hover {
+    @apply hover:bg-slate-50 dark:hover:bg-dark-border/40 transition-colors duration-100;
+  }
+}
+
+@layer utilities {
+  .animate-in {
+    animation: fadeSlideIn 0.35s ease-out both;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-teal-400;
+  }
+
+  .gradient-blob-1 {
+    @apply absolute rounded-full blur-[120px] pointer-events-none opacity-30;
+    background: radial-gradient(circle, #22c55e, transparent 70%);
+  }
+
+  .gradient-blob-2 {
+    @apply absolute rounded-full blur-[100px] pointer-events-none opacity-20;
+    background: radial-gradient(circle, #3b82f6, transparent 70%);
+  }
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
