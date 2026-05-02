@@ -8,7 +8,7 @@ export interface JwtPayload {
 
 export class JwtService {
   private static readonly ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'dev_secret_key';
-  private static readonly REFRESH_TOKEN_SECRET = process.env.REFRESH_JWT_SECRET || 'dev_refresh_secret_key';
+  private static readonly REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret_key';
 
   static generateAccessToken(payload: JwtPayload): string {
     const options: SignOptions = { expiresIn: '15m' };

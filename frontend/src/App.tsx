@@ -9,6 +9,11 @@ import { DonationsPage } from './pages/DonationsPage.js';
 import { AidRequestsPage } from './pages/AidRequestsPage.js';
 import { CasesPage } from './pages/CasesPage.js';
 import { ReportsPage } from './pages/ReportsPage.js';
+import { UsersPage } from './pages/UsersPage.js';
+import { AuditLogsPage } from './pages/AuditLogsPage.js';
+import { ProfilePage } from './pages/ProfilePage.js';
+import { DonorDashboard } from './pages/DonorDashboard.js';
+import { MessagesPage } from './pages/MessagesPage.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,8 +45,16 @@ function App() {
           <Route
             path="/donations"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['NGO_ADMIN', 'SUPER_ADMIN']}>
                 <DonationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/donor-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['DONOR']}>
+                <DonorDashboard />
               </ProtectedRoute>
             }
           />
@@ -66,6 +79,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <ReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute allowedRoles={['NGO_ADMIN', 'SUPER_ADMIN']}>
+                <UsersPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/audit-logs"
+            element={
+              <ProtectedRoute allowedRoles={['NGO_ADMIN', 'SUPER_ADMIN']}>
+                <AuditLogsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <MessagesPage />
               </ProtectedRoute>
             }
           />

@@ -14,6 +14,16 @@ export const useAllDonations = (page = 1, status?: string) => {
   });
 };
 
+export const useMyDonations = () => {
+  return useQuery({
+    queryKey: ['my-donations'],
+    queryFn: async () => {
+      const { data } = await api.get<{ data: Donation[] }>('/donations/my-history');
+      return data;
+    },
+  });
+};
+
 export const useCreateDonation = () => {
   const queryClient = useQueryClient();
   return useMutation({

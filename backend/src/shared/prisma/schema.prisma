@@ -22,6 +22,9 @@ model users {
   audit_logs             audit_logs[]
   authored_disbursements disbursements[]
   donations              donations[]
+  uploaded_documents     documents[]
+  sent_messages          messages[]      @relation("sent_messages")
+  received_messages      messages[]      @relation("received_messages")
 }
 
 model aid_categories {
@@ -84,6 +87,8 @@ model aid_requests {
   region_id       String           @db.Uuid
   dependants      Int              @default(0)
   description     String
+  ai_urgency_score Int?            @db.SmallInt
+  ai_summary      String?          @db.Text
   reviewed_at     DateTime?        @db.Timestamptz(6)
   created_at      DateTime         @default(now()) @db.Timestamptz(6)
   updated_at      DateTime         @updatedAt @db.Timestamptz(6)
@@ -92,6 +97,7 @@ model aid_requests {
   caseworker      users?           @relation("caseworker_requests", fields: [caseworker_id], references: [id])
   region          regions          @relation(fields: [region_id], references: [id])
   disbursements   disbursements[]
+  documents       documents[]
 
   @@index([status, urgency, caseworker_id])
   @@index([beneficiary_id, created_at])
@@ -167,4 +173,49 @@ enum AidRequestStatus {
   APPROVED
   REJECTED
   DISBURSED
+}
+
+model notifications {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  type       String   @db.VarChar(50)
+  message    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([user_id, is_read])
+}
+
+model documents {
+  id             String       @id @default(uuid()) @db.Uuid
+  aid_request_id String       @db.Uuid
+  filename       String       @db.VarChar(255)
+  file_path      String       @db.VarChar(500)
+  content_type   String       @db.VarChar(100)
+  uploaded_by    String       @db.Uuid
+  created_at     DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime     @updatedAt @db.Timestamptz(6)
+  
+  aid_request    aid_requests @relation(fields: [aid_request_id], references: [id])
+  uploader       users        @relation(fields: [uploaded_by], references: [id])
+
+  @@index([aid_request_id])
+}
+
+model messages {
+  id          String   @id @default(uuid()) @db.Uuid
+  sender_id   String   @db.Uuid
+  receiver_id String   @db.Uuid
+  subject     String   @db.VarChar(255)
+  body        String   @db.Text
+  is_read     Boolean  @default(false)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+
+  sender      users    @relation("sent_messages", fields: [sender_id], references: [id])
+  receiver    users    @relation("received_messages", fields: [receiver_id], references: [id])
+
+  @@index([sender_id])
+  @@index([receiver_id, is_read])
 }

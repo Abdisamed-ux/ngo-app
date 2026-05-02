@@ -2,6 +2,8 @@ import { Response } from 'express';
 import { prisma } from '../../shared/prisma/client.js';
 import { donationSchema } from '../../shared/validators/donor.validators.js';
 import { AuthenticatedRequest } from '../../shared/middleware/rbac.middleware.js';
+import { addEmailJob } from '../../shared/jobs/queue.js';
+import { templates } from '../../shared/services/email.service.js';
 
 export const createDonation = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -35,7 +37,22 @@ export const createDonation = async (req: AuthenticatedRequest, res: Response) =
       },
     });
 
-    // TODO: Enqueue BullMQ Background Job here to generate PDF receipt and update generated receipt_number
+    // Enqueue BullMQ Background Job to generate email receipt
+    if (req.user?.role === 'DONOR') {
+      const donor = await prisma.users.findUnique({ where: { id: donorId } });
+      if (donor && donor.email) {
+        await addEmailJob({
+          to: donor.email,
+          subject: 'Thank You For Your Donation',
+          html: templates.donationReceipt(
+            donor.full_name || 'Generous Donor',
+            newDonation.amount.toString(),
+            newDonation.currency,
+            newDonation.receipt_number || 'PENDING-CONFIRMATION'
+          )
+        });
+      }
+    }
 
     return res.status(201).json({
       message: 'Donation submitted successfully',

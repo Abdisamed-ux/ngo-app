@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 import 'dotenv/config';
 
 import authRoutes from './modules/auth/auth.routes.js';
@@ -10,6 +11,9 @@ import aidRequestsRoutes from './modules/aid-requests/aid-requests.routes.js';
 import caseMgmtRoutes from './modules/case-mgmt/case-mgmt.routes.js';
 import fundsRoutes from './modules/funds/funds.routes.js';
 import reportingRoutes from './modules/reporting/reporting.routes.js';
+import notificationsRoutes from './modules/notifications/notifications.routes.js';
+import jobsRoutes from './modules/jobs/jobs.routes.js';
+import messagesRoutes from './modules/messages/messages.routes.js';
 
 const app = express();
 
@@ -18,6 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
 app.use(cookieParser());
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
@@ -27,6 +32,9 @@ app.use('/api/v1/aid-requests', aidRequestsRoutes);
 app.use('/api/v1/case-mgmt', caseMgmtRoutes);
 app.use('/api/v1/funds', fundsRoutes);
 app.use('/api/v1/reporting', reportingRoutes);
+app.use('/api/v1/notifications', notificationsRoutes);
+app.use('/api/v1/jobs', jobsRoutes);
+app.use('/api/v1/messages', messagesRoutes);
 
 // Basic health check
 app.get('/health', (req, res) => {

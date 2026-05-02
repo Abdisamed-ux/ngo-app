@@ -14,6 +14,8 @@ export interface User {
   fullName: string;
   full_name?: string;
   phone?: string;
+  is_active?: boolean;
+  created_at?: string;
 }
 
 // ─── Donations ───────────────────────────────────────────────────────────────
@@ -59,6 +61,15 @@ export type AidRequestStatus =
   | 'REJECTED'
   | 'DISBURSED';
 
+export interface CaseDocument {
+  id: string;
+  filename: string;
+  file_path: string;
+  content_type: string;
+  created_at: string;
+  uploader?: { id: string; full_name: string; email: string };
+}
+
 export interface AidRequest {
   id: string;
   request_number: string;
@@ -75,6 +86,8 @@ export interface AidRequest {
   region?: { id: string; name: string };
   dependants: number;
   description: string;
+  ai_urgency_score?: number | null;
+  ai_summary?: string | null;
   reviewed_at?: string | null;
   created_at: string;
   updated_at: string;
@@ -95,6 +108,12 @@ export interface DashboardKPIs {
   totalDonations: number;
   activeCases: number;
   beneficiaries: number;
+  breakdowns: {
+    donations: Array<{ status: DonationStatus; count: number }>;
+    aidRequests: Array<{ status: AidRequestStatus; count: number }>;
+  };
+  topDonors?: Array<{ id: string; name: string; amount: number }>;
+  monthlyTrends?: Array<{ month: string; donations: number; disbursements: number }>;
 }
 
 // ─── API Pagination Meta ─────────────────────────────────────────────────────
@@ -109,4 +128,35 @@ export interface PaginatedMeta {
 export interface PaginatedResponse<T> {
   data: T[];
   meta: PaginatedMeta;
+}
+
+// ─── Notifications & Messages ────────────────────────────────────────────────
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface Message {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  subject: string;
+  body: string;
+  is_read: boolean;
+  created_at: string;
+  sender?: {
+    id: string;
+    full_name: string;
+    role: string;
+  };
+  receiver?: {
+    id: string;
+    full_name: string;
+    role: string;
+  };
 }

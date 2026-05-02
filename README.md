@@ -33,7 +33,7 @@ Next, you need to start the Node.js backend server.
    ```
 3. Sync your database schema (important if this is your first time):
    ```bash
-   npx prisma db push
+   npx prisma db push --schema=src/shared/prisma/schema.prisma
    ```
 4. Start the development server:
    ```bash
@@ -84,8 +84,22 @@ This application is ready for production deployment using **Docker**.
 
 ---
 
-## Viewing the App
-Once everything is running, open your web browser and go to:
+## Live Production 🚀
+
+The application is officially live and can be accessed at the following links:
+
+- **Frontend**: [https://ngo-frontend-ftrx.onrender.com](https://ngo-frontend-ftrx.onrender.com)
+- **Backend API**: [https://ngo-api-tt12.onrender.com/api/v1](https://ngo-api-tt12.onrender.com/api/v1)
+
+### How to use the Live App
+1.  **Register**: Go to the [Register page](https://ngo-frontend-ftrx.onrender.com/register) to create your admin account.
+2.  **Dashboard**: Once logged in, you can view real-time statistics of donations and aid requests.
+3.  **Donations**: Record new donations directly from the dashboard; they will be securely stored in the production PostgreSQL database.
+
+---
+
+## Viewing the App (Local Development)
+Once everything is running locally, open your web browser and go to:
 👉 **[http://localhost:5173](http://localhost:5173)**
 
 When you are finished and want to shut everything down, you can press `Ctrl + C` in the backend and frontend terminals to stop them. To turn off your database containers, run:

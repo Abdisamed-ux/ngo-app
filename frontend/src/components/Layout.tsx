@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
+import { io } from 'socket.io-client';
 import {
   LayoutDashboard,
   HeartHandshake,
@@ -7,19 +10,29 @@ import {
   Briefcase,
   BarChart3,
   LogOut,
-  Menu,
   ShieldCheck,
+  Users as UsersIcon,
+  History,
+  User as UserIcon,
+  Bell,
+  Menu,
+  Mail,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore.js';
 import { useLogout } from '../hooks/useAuth.js';
 import { ThemeToggle } from './ThemeToggle.js';
+import { NotificationBell } from './NotificationBell.js';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/donations', icon: HeartHandshake, label: 'Donations' },
+  { to: '/donations', icon: HeartHandshake, label: 'Donations', roles: ['NGO_ADMIN', 'SUPER_ADMIN'] },
+  { to: '/donor-dashboard', icon: HeartHandshake, label: 'My Impact', roles: ['DONOR'] },
   { to: '/aid-requests', icon: ClipboardList, label: 'Aid Requests' },
-  { to: '/cases', icon: Briefcase, label: 'Case Management' },
-  { to: '/reports', icon: BarChart3, label: 'Reports' },
+  { to: '/cases', icon: Briefcase, label: 'Case Management', roles: ['NGO_ADMIN', 'SUPER_ADMIN', 'CASEWORKER'] },
+  { to: '/reports', icon: BarChart3, label: 'Reports', roles: ['NGO_ADMIN', 'SUPER_ADMIN'] },
+  { to: '/users', icon: UsersIcon, label: 'Users', roles: ['NGO_ADMIN', 'SUPER_ADMIN'] },
+  { to: '/audit-logs', icon: History, label: 'Audit Logs', roles: ['NGO_ADMIN', 'SUPER_ADMIN'] },
+  { to: '/messages', icon: Mail, label: 'Messages' },
 ];
 
 const roleColors: Record<string, string> = {
@@ -38,7 +51,35 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   const { user } = useAuthStore();
   const logout = useLogout();
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string, visible: boolean } | null>(null);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const socket = io(import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:3000', {
+      withCredentials: true
+    });
+
+    socket.emit('join_user_room', user.id);
+
+    socket.on('notification', (notif) => {
+      // Show toast
+      setToast({ message: notif.message, visible: true });
+      // Invalidate queries to update bell
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      
+      // Hide toast after 4s
+      setTimeout(() => {
+        setToast(prev => prev ? { ...prev, visible: false } : null);
+      }, 4000);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user?.id, queryClient]);
 
   const initials = user?.fullName
     ? user.fullName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -76,17 +117,19 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <Icon size={18} />
-              <span>{label}</span>
-            </NavLink>
-          ))}
+          {navItems
+            .filter((item) => !item.roles || (user?.role && item.roles.includes(user.role)))
+            .map(({ to, icon: Icon, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <Icon size={18} />
+                <span>{label}</span>
+              </NavLink>
+            ))}
         </nav>
 
         {/* User section */}
@@ -104,6 +147,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
               </span>
             </div>
           </div>
+          <NavLink
+            to="/profile"
+            className={({ isActive }) => `flex items-center gap-2 text-sm text-slate-500 hover:text-brand-500 dark:text-slate-400 dark:hover:text-brand-400 transition-colors py-2 px-2 rounded-xl hover:bg-slate-50 dark:hover:bg-dark-border/50 mb-1 ${isActive ? 'text-brand-500 bg-slate-50 dark:bg-dark-border/50' : ''}`}
+          >
+            <UserIcon size={15} />
+            <span>Profile Settings</span>
+          </NavLink>
           <button
             onClick={() => logout.mutate()}
             className="w-full flex items-center gap-2 text-sm text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors py-2 px-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10"
@@ -128,15 +178,42 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
           {title && (
             <h1 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h1>
           )}
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-4">
+            <NotificationBell />
             <ThemeToggle />
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6 animate-in">
-          {children}
-        </main>
+        <AnimatePresence mode="wait">
+          <motion.main
+            key={title || 'page'}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="flex-1 overflow-y-auto p-6 relative"
+          >
+            {children}
+          </motion.main>
+        </AnimatePresence>
+
+        {/* Live Toast Notification */}
+        <AnimatePresence>
+          {toast?.visible && (
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white dark:bg-brand-500 shadow-2xl rounded-2xl p-4 flex items-center gap-3 max-w-sm"
+            >
+              <div className="w-8 h-8 rounded-full bg-brand-500 dark:bg-white/20 flex items-center justify-center flex-shrink-0">
+                <Bell size={16} />
+              </div>
+              <p className="text-sm font-medium leading-snug">{toast.message}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

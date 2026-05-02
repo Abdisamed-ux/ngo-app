@@ -2,24 +2,24 @@ import React from 'react';
 import type { AidRequestStatus, DonationStatus, UrgencyLevel } from '../types/index.js';
 
 const aidStatusStyles: Record<AidRequestStatus, string> = {
-  SUBMITTED: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
-  UNDER_REVIEW: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  APPROVED: 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400',
-  REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  DISBURSED: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+  SUBMITTED: 'bg-slate-100/70 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:border dark:border-slate-700/50',
+  UNDER_REVIEW: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border dark:border-indigo-500/20',
+  APPROVED: 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400 dark:border dark:border-brand-500/20',
+  REJECTED: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 dark:border dark:border-red-500/20',
+  DISBURSED: 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400 dark:border dark:border-teal-500/20',
 };
 
 const donationStatusStyles: Record<DonationStatus, string> = {
-  PENDING: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  CONFIRMED: 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400',
-  ALLOCATED: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  REFUNDED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  PENDING: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 dark:border dark:border-amber-500/20',
+  CONFIRMED: 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400 dark:border dark:border-brand-500/20',
+  ALLOCATED: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border dark:border-indigo-500/20',
+  REFUNDED: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 dark:border dark:border-red-500/20',
 };
 
 const urgencyStyles: Record<UrgencyLevel, string> = {
-  CRITICAL: 'bg-red-500 text-white',
-  HIGH: 'bg-amber-500 text-white',
-  MEDIUM: 'bg-blue-500 text-white',
+  CRITICAL: 'bg-red-500 text-white shadow-[0_0_10px_rgba(239,68,68,0.4)]',
+  HIGH: 'bg-amber-500 text-white shadow-[0_0_10px_rgba(245,158,11,0.4)]',
+  MEDIUM: 'bg-indigo-500 text-white shadow-[0_0_10px_rgba(99,102,241,0.4)]',
   LOW: 'bg-slate-400 text-white',
 };
 

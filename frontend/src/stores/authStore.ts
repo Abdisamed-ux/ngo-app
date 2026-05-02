@@ -33,7 +33,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'ngo-auth',
-      partialState: (state: AuthState) => ({ user: state.user, token: state.token, isAuthenticated: state.isAuthenticated }),
+      partialize: (state: AuthState) => ({ user: state.user, token: state.token, isAuthenticated: state.isAuthenticated }),
     } as any
   )
 );

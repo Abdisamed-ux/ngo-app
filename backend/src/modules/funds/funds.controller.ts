@@ -51,6 +51,15 @@ export const disburseFunds = async (req: AuthenticatedRequest, res: Response) =>
         }
       });
 
+      // Notify Beneficiary
+      await tx.notifications.create({
+        data: {
+          user_id: aidRequest.beneficiary_id,
+          type: 'FUNDS_DISBURSED',
+          message: `Funds of ${amount} have been disbursed for your request ${aidRequest.request_number}. Ref: ${paymentReference}`,
+        }
+      });
+
       return { disbursement, updatedRequest };
     });
 

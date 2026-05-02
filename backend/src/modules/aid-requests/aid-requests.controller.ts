@@ -1,7 +1,8 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { prisma } from '../../shared/prisma/client.js';
 import { aidRequestSchema } from '../../shared/validators/aid-requests.validators.js';
 import { AuthenticatedRequest } from '../../shared/middleware/rbac.middleware.js';
+import { analyzeAidRequest } from '../../shared/services/ai.service.js';
 
 /**
  * Utility to generate sequential aid request numbers
@@ -31,6 +32,8 @@ export const submitAidRequest = async (req: AuthenticatedRequest, res: Response)
     const validatedData = aidRequestSchema.parse(req.body);
     const requestNumber = await generateAidRequestNumber();
 
+    const aiAnalysis = await analyzeAidRequest(validatedData.description);
+
     const newRequest = await prisma.aid_requests.create({
       data: {
         request_number: requestNumber,
@@ -42,6 +45,8 @@ export const submitAidRequest = async (req: AuthenticatedRequest, res: Response)
         region_id: validatedData.regionId,
         dependants: validatedData.dependants,
         description: validatedData.description,
+        ai_urgency_score: aiAnalysis.urgencyScore,
+        ai_summary: aiAnalysis.summary,
       },
     });
 
@@ -76,12 +81,28 @@ export const getMyRequests = async (req: AuthenticatedRequest, res: Response) =>
     const beneficiaryId = req.user?.userId;
     if (!beneficiaryId) return res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
 
-    const requests = await prisma.aid_requests.findMany({
-      where: { beneficiary_id: beneficiaryId },
-      orderBy: { created_at: 'desc' },
-    });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 25;
+    const skip = (page - 1) * limit;
 
-    return res.status(200).json({ data: requests });
+    const [requests, total] = await Promise.all([
+      prisma.aid_requests.findMany({
+        where: { beneficiary_id: beneficiaryId },
+        skip,
+        take: limit,
+        orderBy: { created_at: 'desc' },
+        include: {
+          aid_type: { select: { id: true, name: true } },
+          region: { select: { id: true, name: true } },
+        },
+      }),
+      prisma.aid_requests.count({ where: { beneficiary_id: beneficiaryId } }),
+    ]);
+
+    return res.status(200).json({
+      data: requests,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   } catch (error) {
     console.error('Get My Requests Error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
@@ -126,3 +147,21 @@ export const getAllAidRequests = async (req: AuthenticatedRequest, res: Response
   }
 };
 
+
+export const getAidTypes = async (req: Request, res: Response) => {
+  try {
+    const types = await prisma.aid_types.findMany({ orderBy: { name: 'asc' } });
+    return res.status(200).json({ data: types });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const getRegions = async (req: Request, res: Response) => {
+  try {
+    const regions = await prisma.regions.findMany({ orderBy: { name: 'asc' } });
+    return res.status(200).json({ data: regions });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};

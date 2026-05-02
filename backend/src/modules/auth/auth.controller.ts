@@ -3,6 +3,9 @@ import { prisma } from '../../shared/prisma/client.js';
 import { registerSchema, loginSchema } from '../../shared/validators/auth.validators.js';
 import { PasswordService } from './password.service.js';
 import { JwtService } from './jwt.service.js';
+import { addEmailJob } from '../../shared/jobs/queue.js';
+import { templates } from '../../shared/services/email.service.js';
+import { AuthenticatedRequest } from '../../shared/middleware/rbac.middleware.js';
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -38,6 +41,13 @@ export const register = async (req: Request, res: Response) => {
         timestamp: new Date(),
         new_value: { email: newUser.email, role: newUser.role, full_name: newUser.full_name },
       },
+    });
+
+    // Queue welcome email
+    await addEmailJob({
+      to: newUser.email,
+      subject: 'Welcome to TrustVerify NGO!',
+      html: templates.welcome(newUser.full_name || 'User')
     });
 
     const tokenPayload = { userId: newUser.id, role: newUser.role };
@@ -138,4 +148,48 @@ export const refresh = async (req: Request, res: Response) => {
 export const logout = (req: Request, res: Response) => {
   res.clearCookie('refresh_token');
   return res.status(204).send();
+};
+
+export const updateProfile = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { fullName } = req.body;
+
+    const updatedUser = await prisma.users.update({
+      where: { id: userId },
+      data: { full_name: fullName },
+    });
+
+    return res.status(200).json({
+      message: 'Profile updated successfully',
+      user: { id: updatedUser.id, email: updatedUser.email, role: updatedUser.role, full_name: updatedUser.full_name },
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const changePassword = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await prisma.users.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ error: 'Not Found' });
+
+    const isMatch = await PasswordService.compare(currentPassword, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Incorrect current password' });
+    }
+
+    const newPasswordHash = await PasswordService.hash(newPassword);
+    await prisma.users.update({
+      where: { id: userId },
+      data: { password_hash: newPasswordHash },
+    });
+
+    return res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
 };

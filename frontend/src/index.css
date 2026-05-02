@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* Fonts loaded via index.html */
 
 @tailwind base;
 @tailwind components;
@@ -19,10 +19,14 @@
   }
 
   body {
-    font-family: 'Inter', sans-serif;
-    @apply bg-slate-50 text-slate-900 dark:bg-dark-bg dark:text-slate-100;
+    @apply bg-slate-50 text-slate-900 dark:bg-dark-bg dark:text-slate-100 font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    @apply tracking-tight;
   }
 
   ::-webkit-scrollbar {
@@ -41,11 +45,11 @@
 
 @layer components {
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/40 dark:bg-dark-surface/60 dark:border-white/10;
+    @apply bg-white/70 backdrop-blur-xl border border-white/50 dark:bg-dark-surface/50 dark:border-white/5 shadow-xl shadow-brand-500/5;
   }
 
   .glass-dark {
-    @apply bg-dark-surface/80 backdrop-blur-md border border-white/10;
+    @apply bg-dark-surface/60 backdrop-blur-xl border border-white/10 shadow-2xl;
   }
 
   .card {
@@ -53,14 +57,14 @@
   }
 
   .btn-primary {
-    @apply bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl 
-           transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/50
-           disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
+    @apply bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-semibold px-5 py-2.5 rounded-xl 
+           transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50 shadow-lg shadow-brand-500/20
+           disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] hover:-translate-y-0.5;
   }
 
   .btn-ghost {
-    @apply bg-transparent hover:bg-slate-100 dark:hover:bg-dark-border text-slate-700 dark:text-slate-300 
-           font-medium px-4 py-2 rounded-xl transition-all duration-200;
+    @apply bg-transparent hover:bg-slate-100 dark:hover:bg-dark-border/50 text-slate-700 dark:text-slate-300 
+           font-medium px-4 py-2 rounded-xl transition-all duration-300 hover:-translate-y-0.5;
   }
 
   .btn-danger {
@@ -101,17 +105,17 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-teal-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-purple-400;
   }
 
   .gradient-blob-1 {
-    @apply absolute rounded-full blur-[120px] pointer-events-none opacity-30;
-    background: radial-gradient(circle, #22c55e, transparent 70%);
+    @apply absolute rounded-full blur-[120px] pointer-events-none opacity-30 animate-pulse-glow;
+    background: radial-gradient(circle, #6366f1, transparent 70%);
   }
 
   .gradient-blob-2 {
-    @apply absolute rounded-full blur-[100px] pointer-events-none opacity-20;
-    background: radial-gradient(circle, #3b82f6, transparent 70%);
+    @apply absolute rounded-full blur-[120px] pointer-events-none opacity-20 animate-float;
+    background: radial-gradient(circle, #a855f7, transparent 70%);
   }
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { HeartHandshake, Users, AlertCircle, TrendingUp, Activity } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { Layout } from '../components/Layout.js';
 import { LoadingSpinner } from '../components/LoadingSpinner.js';
 import { useDashboardKPIs } from '../hooks/useReporting.js';
@@ -50,63 +51,104 @@ export const Dashboard: React.FC = () => {
         />
       </div>
 
-      {/* Recent Aid Requests */}
-      <div className="card p-6">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <Activity size={18} className="text-brand-500" />
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Recent Aid Requests</h2>
+      {/* Insights Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="card p-6 lg:col-span-1">
+          <div className="flex items-center gap-2 mb-6">
+            <TrendingUp size={18} className="text-brand-500" />
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Status Distribution</h2>
           </div>
-          <a href="/aid-requests" className="text-sm text-brand-500 hover:text-brand-600 font-medium">
-            View all →
-          </a>
+          <div className="h-[250px] w-full flex items-center justify-center">
+            {kpis?.breakdowns?.aidRequests && kpis.breakdowns.aidRequests.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={kpis.breakdowns.aidRequests}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="count"
+                    nameKey="status"
+                    stroke="none"
+                  >
+                    {kpis.breakdowns.aidRequests.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#eab308', '#22c55e'][index % 6]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '12px', backdropFilter: 'blur(8px)' }}
+                    itemStyle={{ color: '#e2e8f0' }}
+                    formatter={(value: any) => [value, 'Requests']}
+                    labelFormatter={(label) => String(label).replace('_', ' ')}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <span className="text-slate-400 text-sm">No data available</span>
+            )}
+          </div>
         </div>
 
-        {reqLoading ? (
-          <div className="flex justify-center py-8">
-            <LoadingSpinner size={32} />
+        {/* Recent Aid Requests */}
+        <div className="card p-6 lg:col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Activity size={18} className="text-brand-500" />
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">Recent Aid Requests</h2>
+            </div>
+            <a href="/aid-requests" className="text-sm text-brand-500 hover:text-brand-600 font-medium">
+              View all →
+            </a>
           </div>
-        ) : recentRequests.length === 0 ? (
-          <div className="text-center py-10 text-slate-400">
-            <AlertCircle size={36} className="mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No aid requests yet</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 dark:border-dark-border">
-                  <th className="text-left pb-3 font-medium text-slate-500 dark:text-slate-400">Request #</th>
-                  <th className="text-left pb-3 font-medium text-slate-500 dark:text-slate-400">Beneficiary</th>
-                  <th className="text-left pb-3 font-medium text-slate-500 dark:text-slate-400">Urgency</th>
-                  <th className="text-left pb-3 font-medium text-slate-500 dark:text-slate-400">Status</th>
-                  <th className="text-left pb-3 font-medium text-slate-500 dark:text-slate-400">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-dark-border">
-                {recentRequests.map((req) => (
-                  <tr key={req.id} className="table-row-hover">
-                    <td className="py-3 font-mono text-xs text-slate-600 dark:text-slate-300">
-                      {req.request_number}
-                    </td>
-                    <td className="py-3 text-slate-700 dark:text-slate-300">
-                      {req.beneficiary?.full_name || '—'}
-                    </td>
-                    <td className="py-3">
-                      <StatusBadge type="urgency" value={req.urgency} />
-                    </td>
-                    <td className="py-3">
-                      <StatusBadge type="aidRequest" value={req.status} />
-                    </td>
-                    <td className="py-3 text-slate-500 dark:text-slate-400 text-xs">
-                      {new Date(req.created_at).toLocaleDateString()}
-                    </td>
+
+          {reqLoading ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner size={32} />
+            </div>
+          ) : recentRequests.length === 0 ? (
+            <div className="text-center py-10 text-slate-400">
+              <AlertCircle size={36} className="mx-auto mb-2 opacity-40" />
+              <p className="text-sm">No aid requests yet</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-dark-border text-slate-500 text-xs uppercase tracking-wider">
+                    <th className="text-left pb-3 font-medium">Request #</th>
+                    <th className="text-left pb-3 font-medium">Beneficiary</th>
+                    <th className="text-left pb-3 font-medium">Urgency</th>
+                    <th className="text-left pb-3 font-medium">Status</th>
+                    <th className="text-left pb-3 font-medium text-right">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-dark-border">
+                  {recentRequests.map((req) => (
+                    <tr key={req.id} className="table-row-hover">
+                      <td className="py-4 font-mono text-[10px] text-slate-400">
+                        {req.request_number}
+                      </td>
+                      <td className="py-4 text-slate-700 dark:text-slate-300 font-medium">
+                        {req.beneficiary?.full_name || '—'}
+                      </td>
+                      <td className="py-4">
+                        <StatusBadge type="urgency" value={req.urgency} />
+                      </td>
+                      <td className="py-4">
+                        <StatusBadge type="aidRequest" value={req.status} />
+                      </td>
+                      <td className="py-4 text-slate-400 text-[10px] text-right">
+                        {new Date(req.created_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </Layout>
   );
